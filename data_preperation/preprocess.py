@@ -3,10 +3,6 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import pickle as pkl
-config={
-    "data":"/mnt/6A8CB2D58CB29AD1/Project_Live_trading_2.0/data/ADANIPORTS_minute.csv",
-    "saved_data":"/mnt/6A8CB2D58CB29AD1/Project_Live_trading_2.0/saved_data"
-}
 
 class DataPreprocess():
 
@@ -70,7 +66,5 @@ class DataPreprocess():
         print("data is saved in path "+path)
         pkl.dump((self.Final_Data_x,self.Final_Data_y),open(path,'wb'))
 
-obj=DataPreprocess(config,3,3,True)
 
-data=obj.get_data(load_from="/mnt/6A8CB2D58CB29AD1/Project_Live_trading_2.0/saved_data/data_3_3.pkl")
 
