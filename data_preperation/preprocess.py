@@ -40,10 +40,7 @@ class DataPreprocess():
 
         self.Final_Data_x=torch.tensor(np.array(self.Final_Data_x),dtype=torch.float32)
         self.Final_Data_y=torch.tensor(np.array(self.Final_Data_y),dtype=torch.float32)
-        
-        # print(self.raw_data[0:15])
-        # print(self.Final_Data_x[:6])
-        # print(self.Final_Data_y[:6])
+    
 
         if self.save==True:
             self.save_data()
