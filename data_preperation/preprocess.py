@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import pickle as pkl
+from torch.utils.data import Dataset,DataLoader,random_split
 
 class DataPreprocess():
 
@@ -16,7 +17,7 @@ class DataPreprocess():
         self.size=size
         self.save=save
 
-    def get_data(self,load_from):
+    def get_data(self):
 
         # if load_from!=None:
         #     self.Final_Data_x,self.Final_Data_y=pkl.load(open(load_from,'rb'))
@@ -42,6 +43,7 @@ class DataPreprocess():
 
         return self.data_x,self.data_y
 
+
     def make_grid(self,x):
         data_y=[]
         s=self.size**2
@@ -56,7 +58,28 @@ class DataPreprocess():
             data_x.append(temp)
         return data_x,data_y
 
+    def laoded_data(self,x,y,batch_size):
+        
+        dataset=MyDataset(x,y)
+
+        data=random_split(dataset,[0.8,.2])
+        train_data=DataLoader(data[0],batch_size)
+        test_data=DataLoader(data[1])
+
+        return train_data,test_data
 
 
+    
+class MyDataset(Dataset):
+    def __init__(self,x,y):
 
+        self.x=torch.tensor(x,dtype=torch.float32,requires_grad=True)
+        self.y=torch.tensor(y,dtype=torch.float32,requires_grad=True)
+        
+    def __len__(self):
+        return len(self.x)
+    
+    def __getitem__(self, index):
 
+        return self.x[index],self.y[index]
+    
