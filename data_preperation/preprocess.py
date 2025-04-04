@@ -6,65 +6,57 @@ import pickle as pkl
 
 class DataPreprocess():
 
-    def __init__(self,config,time_window,sliding_window,save):
+    def __init__(self,config,size,save):
 
         self.config=config
         data_path=self.config['data']
 
         self.raw_data=pd.read_csv(open(data_path,'r'))
 
-        self.time_window=time_window
-        self.sliding_window=sliding_window
-
-        self.Final_Data_x=[]
-        self.Final_Data_y=[]
+        self.size=size
         self.save=save
 
     def get_data(self,load_from):
 
-        if load_from!=None:
-            data=pkl.load(open(load_from,'rb'))
-            return data
+        # if load_from!=None:
+        #     self.Final_Data_x,self.Final_Data_y=pkl.load(open(load_from,'rb'))
+        #     return self.Final_Data_x,self.Final_Data_y
 
         self.raw_data[['date','time']]=self.raw_data['date'].str.split(expand=True)
 
-        group=self.raw_data.groupby('date').groups   
+        group=self.raw_data.groupby('date').groups
+
+        self.raw_data=self.raw_data[['open','high','low','close','volume']]
+
+        self.data_x=[]   
+        self.data_y=[]   
         for i in tqdm(group):
             day=self.raw_data[group[i][0]:group[i][-1]]
-            converted=np.array(self.converting_timestamp(day))
-            self.sliding_data(converted)
+            if self.size**2<=len(day):
+                op= self.make_grid(day)
+                self.data_x.append(op[0])
+                self.data_y.append(np.array(op[1]).reshape(-1,1))
 
-        self.Final_Data_x=torch.tensor(np.array(self.Final_Data_x),dtype=torch.float32)
-        self.Final_Data_y=torch.tensor(np.array(self.Final_Data_y),dtype=torch.float32)
-    
+        self.data_x=np.vstack(self.data_x)
+        self.data_y=np.vstack(self.data_y)
 
-        if self.save==True:
-            self.save_data()
-        return (self.Final_Data_x,self.Final_Data_y)
-    
-    def converting_timestamp(self,data):
-        day_data=[]
-        count=0
-        for i in range(0,len(data)//self.time_window):
+        return self.data_x,self.data_y
 
-            x=data.iloc[count:count+self.time_window]
-            count+=self.time_window
-            day_data.append([x['open'].iloc[0],x['high'].max(),x['low'].min(),x['close'].iloc[-1],x['volume'].sum()])
-        return day_data
+    def make_grid(self,x):
+        data_y=[]
+        s=self.size**2
+        x_temp=x['close'].to_numpy()
+        x=np.array(x)
+        data_x=[]
+        for i in range(len(x)-s-1):
+            temp=[]
+            for j in range(5):
+                temp.append(x[i:s+i,j].reshape((self.size,self.size)))
+            data_y.append(x_temp[s+i])
+            data_x.append(temp)
+        return data_x,data_y
 
-    def sliding_data(self,x):
 
-        for i in range(0 ,len(x)-self.sliding_window):
-            
-            # 3rd column is close column
-            self.Final_Data_y.append(x[i+self.sliding_window][3])
-            self.Final_Data_x.append(np.hstack(list(x[i:i+self.sliding_window])))
-
-    def save_data(self):
-
-        path=self.config['saved_data']+"/data_"+str(self.time_window)+"_"+str(self.sliding_window)+".pkl"
-        print("data is saved in path "+path)
-        pkl.dump((self.Final_Data_x,self.Final_Data_y),open(path,'wb'))
 
 
 
